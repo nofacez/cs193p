@@ -7,43 +7,73 @@
 
 import SwiftUI
 
+
+let emojisDict = [
+    "animals": [ "🐍", "🐥", "🦆", "🦀", "🐛", "🦕", "🕸", "🐫", "🐬", "🕷", "🐌"],
+    "weather": ["🌧", "❄️", "🌕", "🌟", "☃️", "🌦", "⛈", "🌩", "☔️", "☂️", "🌈"],
+    "cars":  ["🚗", "🚕", "🚌", "🚙", "🚎", "🏎", "🚜", "🚃", "🛺", "🚔", "🚑"]
+]
+
 struct ContentView: View {
-    var emojis = [ "🐍", "🐥", "🦆", "🦀", "🐛", "🦕", "🕸", "🐫", "🐬", "🕷", "🐌"]
-    
-    @State var emojiCount = 6
+    @State var currentTheme = "animals"
+
+    func getCardWidth(cardCount: Int) -> CGFloat {
+        let width = UIScreen.main.bounds.width
+        return CGFloat(Int(width) / cardCount * 2)
+    }
     
     var body: some View {
+        let emojiCount = Int.random(in: 8..<11)
+        let cardWidth = getCardWidth(cardCount: emojiCount)
+        
         VStack {
-            HStack {
-                ForEach(emojis[0..<emojiCount], id: \.self) { emoji in
-                    CardView(content: emoji)
+            Text("Memorize!")
+                .font(.title)
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth))]) {
+                    ForEach(
+                        (emojisDict[currentTheme]?[0...emojiCount])!, id: \.self) { emoji in
+                        CardView(content: emoji).aspectRatio(2/3, contentMode: .fit)
+                    }
                 }
             }
             .foregroundColor(.purple)
             Spacer()
-            HStack {
-                remove
-                Spacer()
-                add
+            HStack(alignment: .bottom, spacing: 20) {
+                Button {
+                    currentTheme = "animals"
+                } label: {
+                    ThemeLabelView(image: "ladybug.fill", text: "Animals")
+                }
+                
+                Button {
+                    currentTheme = "weather"
+                } label: {
+                    ThemeLabelView(image: "sun.min", text: "Weather")
+                }
+                
+                Button {
+                    currentTheme = "cars"
+                } label: {
+                    ThemeLabelView(image: "car.fill", text: "Cars")
+                }
             }
-            .font(.largeTitle)
+            
         }
         .padding(.horizontal)
+        
     }
+}
+
+struct ThemeLabelView: View {
+    var image: String
+    var text: String
     
-    var remove: some View {
-        Button {
-            if (emojiCount > 1) {
-                emojiCount -= 1
-            }
-        } label: { Image(systemName: "minus.circle") }
-    }
-    var add: some View {
-        Button {
-            if (emojiCount < emojis.count) {
-                emojiCount += 1
-            }
-        } label: { Image(systemName: "plus.circle") }
+    var body: some View {
+        VStack() {
+            Image(systemName: image)
+            Text(text)
+        }.font(.title2)
     }
 }
 
@@ -57,7 +87,7 @@ struct CardView: View {
             
             if isFaceUp {
                 shape.fill().foregroundColor(.white)
-                shape.stroke(lineWidth: 5)
+                shape.strokeBorder(lineWidth: 5)
                 Text(content).font(.largeTitle)
             } else {
                 shape.fill()
@@ -73,7 +103,6 @@ struct CardView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-        ContentView()
-            .preferredColorScheme(.dark)
+            .previewInterfaceOrientation(.portrait)
     }
 }
