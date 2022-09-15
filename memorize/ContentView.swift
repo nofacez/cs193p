@@ -8,93 +8,52 @@
 import SwiftUI
 
 
-let emojisDict = [
-    "animals": [ "🐍", "🐥", "🦆", "🦀", "🐛", "🦕", "🕸", "🐫", "🐬", "🕷", "🐌"],
-    "weather": ["🌧", "❄️", "🌕", "🌟", "☃️", "🌦", "⛈", "🌩", "☔️", "☂️", "🌈"],
-    "cars":  ["🚗", "🚕", "🚌", "🚙", "🚎", "🏎", "🚜", "🚃", "🛺", "🚔", "🚑"]
-]
-
 struct ContentView: View {
     @State var currentTheme = "animals"
-
-    func getCardWidth(cardCount: Int) -> CGFloat {
-        let width = UIScreen.main.bounds.width
-        return CGFloat(Int(width) / cardCount * 2)
-    }
+    // Essentialy it says: "Rerender view Everytime ObservedObject is changed" 
+    @ObservedObject var viewModel: EmojiMemoryGame
     
     var body: some View {
-        let emojiCount = Int.random(in: 8..<11)
-        let cardWidth = getCardWidth(cardCount: emojiCount)
-        
         VStack {
-            Text("Memorize!")
+            Text("Memorize \(viewModel.theme.name)!")
                 .font(.title)
+            Text("Score: \(viewModel.score)")
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth))]) {
-                    ForEach(
-                        (emojisDict[currentTheme]?[0...emojiCount])!, id: \.self) { emoji in
-                        CardView(content: emoji).aspectRatio(2/3, contentMode: .fit)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
+                    ForEach(viewModel.cards) { card in
+                        CardView(card: card).aspectRatio(2/3, contentMode: .fit)
+                            .onTapGesture {
+                                viewModel.choose(card)
+                            }
+                            .foregroundColor(viewModel.themeColor)
                     }
                 }
             }
-            .foregroundColor(.purple)
             Spacer()
-            HStack(alignment: .bottom, spacing: 20) {
-                Button {
-                    currentTheme = "animals"
-                } label: {
-                    ThemeLabelView(image: "ladybug.fill", text: "Animals")
-                }
-                
-                Button {
-                    currentTheme = "weather"
-                } label: {
-                    ThemeLabelView(image: "sun.min", text: "Weather")
-                }
-                
-                Button {
-                    currentTheme = "cars"
-                } label: {
-                    ThemeLabelView(image: "car.fill", text: "Cars")
-                }
-            }
-            
+            Button(action: {
+                viewModel.startNewGame()
+            }, label: { Text("Start New Game") })
         }
         .padding(.horizontal)
-        
-    }
-}
-
-struct ThemeLabelView: View {
-    var image: String
-    var text: String
-    
-    var body: some View {
-        VStack() {
-            Image(systemName: image)
-            Text(text)
-        }.font(.title2)
     }
 }
 
 struct CardView: View {
-    var content: String
-    @State var isFaceUp: Bool = true
+    let card: MemoryGame<String>.Card
     
     var body: some View {
         ZStack {
             let shape = RoundedRectangle(cornerRadius: 25)
             
-            if isFaceUp {
+            if card.isFaceUp {
                 shape.fill().foregroundColor(.white)
                 shape.strokeBorder(lineWidth: 5)
-                Text(content).font(.largeTitle)
+                Text(card.content).font(.largeTitle)
+            } else if card.isMatched {
+                shape.opacity(0)
             } else {
                 shape.fill()
             }
-        }
-        .onTapGesture {
-            isFaceUp = !isFaceUp
         }
     }
 }
@@ -102,7 +61,8 @@ struct CardView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        let game = EmojiMemoryGame()
+        ContentView(viewModel: game)
             .previewInterfaceOrientation(.portrait)
     }
 }
