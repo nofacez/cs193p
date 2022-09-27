@@ -8,12 +8,12 @@
 import SwiftUI
 
 
-class EmojiMemoryGame: ObservableObject {    
+class EmojiMemoryGame: ObservableObject {
     private var themeModel: ThemeModel
     @Published private var model: MemoryGame<String>
 
     
-    static func createMemoryGame(theme: ThemeModel.Theme) -> MemoryGame<String> {
+    private static func createMemoryGame(theme: ThemeModel.Theme) -> MemoryGame<String> {
         var numberOfPairs = theme.numberOfPairs
         if theme.numberOfPairs > theme.emojis.count {
             numberOfPairs = theme.emojis.count

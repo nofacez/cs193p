@@ -9,7 +9,8 @@ import SwiftUI
 
 
 struct ContentView: View {
-    @State var currentTheme = "animals"
+    typealias Card = MemoryGame<String>.Card
+    
     // Essentialy it says: "Rerender view Everytime ObservedObject is changed" 
     @ObservedObject var viewModel: EmojiMemoryGame
     
@@ -19,7 +20,7 @@ struct ContentView: View {
                 .font(.title)
             Text("Score: \(viewModel.score)")
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))]) {
                     ForEach(viewModel.cards) { card in
                         CardView(card: card).aspectRatio(2/3, contentMode: .fit)
                             .onTapGesture {
@@ -39,22 +40,34 @@ struct ContentView: View {
 }
 
 struct CardView: View {
-    let card: MemoryGame<String>.Card
-    
+    let card: ContentView.Card
+
     var body: some View {
-        ZStack {
-            let shape = RoundedRectangle(cornerRadius: 25)
-            
-            if card.isFaceUp {
-                shape.fill().foregroundColor(.white)
-                shape.strokeBorder(lineWidth: 5)
-                Text(card.content).font(.largeTitle)
-            } else if card.isMatched {
-                shape.opacity(0)
-            } else {
-                shape.fill()
+        GeometryReader { geometry in
+            ZStack {
+                let shape = RoundedRectangle(cornerRadius: DrawingConstants.cornerRadius)
+                
+                if card.isFaceUp {
+                    shape.fill().foregroundColor(.white)
+                    shape.strokeBorder(lineWidth: DrawingConstants.lineWidth)
+                    Text(card.content).font(font(in: geometry.size))
+                } else if card.isMatched {
+                    shape.opacity(0)
+                } else {
+                    shape.fill()
+                }
             }
         }
+    }
+    
+    private func font(in size: CGSize) -> Font {
+        Font.system(size: min(size.width, size.height) / 2)
+    }
+    
+    private struct DrawingConstants {
+        static let cornerRadius: CGFloat = 20
+        static let lineWidth: CGFloat = 5
+        
     }
 }
 
