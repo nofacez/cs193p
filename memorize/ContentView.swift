@@ -19,16 +19,8 @@ struct ContentView: View {
             Text("Memorize \(viewModel.theme.name)!")
                 .font(.title)
             Text("Score: \(viewModel.score)")
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))]) {
-                    ForEach(viewModel.cards) { card in
-                        CardView(card: card).aspectRatio(2/3, contentMode: .fit)
-                            .onTapGesture {
-                                viewModel.choose(card)
-                            }
-                            .foregroundColor(viewModel.themeColor)
-                    }
-                }
+            AspectVGrid(items: viewModel.cards, aspectRatio: 2/3) { card in
+                cardView(for: card)
             }
             Spacer()
             Button(action: {
@@ -36,6 +28,20 @@ struct ContentView: View {
             }, label: { Text("Start New Game") })
         }
         .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    private func cardView(for card: EmojiMemoryGame.Card) -> some View {
+        if card.isMatched && !card.isFaceUp {
+            Rectangle().opacity(0)
+        } else {
+            CardView(card: card)
+                .padding(4)
+                .onTapGesture {
+                    viewModel.choose(card)
+                }
+                .foregroundColor(viewModel.themeColor)
+        }
     }
 }
 
@@ -50,6 +56,10 @@ struct CardView: View {
                 if card.isFaceUp {
                     shape.fill().foregroundColor(.white)
                     shape.strokeBorder(lineWidth: DrawingConstants.lineWidth)
+                    Pie(
+                        startAngle: Angle(degrees: 0-90),
+                        endAngle: Angle(degrees: 110-90)
+                    ).opacity(0.5).padding(10)
                     Text(card.content).font(font(in: geometry.size))
                 } else if card.isMatched {
                     shape.opacity(0)
@@ -67,7 +77,6 @@ struct CardView: View {
     private struct DrawingConstants {
         static let cornerRadius: CGFloat = 20
         static let lineWidth: CGFloat = 5
-        
     }
 }
 
@@ -75,7 +84,7 @@ struct CardView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let game = EmojiMemoryGame()
-        ContentView(viewModel: game)
-            .previewInterfaceOrientation(.portrait)
+        game.choose(game.cards.first!)
+        return ContentView(viewModel: game)
     }
 }
